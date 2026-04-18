@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Conditional Access Policy</title>
+
+    <style>
+      :root {
+        --color-background-primary: #1f1f1f;
+        --color-background-secondary: #2a2a2a;
+        --color-background-tertiary: #333;
+
+        --color-text-primary: #ffffff;
+        --color-text-secondary: #b3b3b3;
+        --color-text-tertiary: #888;
+
+        --color-border-tertiary: #3a3a3a;
+
+        --color-background-success: #1b5e20;
+        --color-text-success: #66bb6a;
+
+        --color-background-warning: #3e2723;
+        --color-text-warning: #ffb74d;
+
+        --color-background-danger: #3b0d0d;
+        --color-text-danger: #ef5350;
+
+        --color-background-info: #0d2b3b;
+        --color-text-info: #4fc3f7;
+
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+        --font-mono: monospace;
+      }
+
+      body {
+        background: #121212;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      .top {
+        padding: 1.25rem 1.5rem 1rem;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+      }
+      .top h1 {
+        font-size: 17px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+      }
+      .top p {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        margin-top: 3px;
+      }
+      .score-hero {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 24px;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+      }
+      .dial-wrap {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+      }
+      .dial-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .dial-score {
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        line-height: 1;
+      }
+      .dial-max {
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+        margin-top: 2px;
+      }
+      .hero-right {
+      }
+      .hero-title {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        margin-bottom: 10px;
+      }
+      .compare-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .cmp {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .cmp-label {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        width: 180px;
+        flex-shrink: 0;
+      }
+      .cmp-bar-wrap {
+        flex: 1;
+        height: 8px;
+        background: var(--color-background-secondary);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .cmp-bar {
+        height: 8px;
+        border-radius: 4px;
+        transition: width 1s ease;
+      }
+      .cmp-val {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        min-width: 36px;
+        text-align: right;
+      }
+      .body {
+        padding: 1.25rem 1.5rem 1.5rem;
+      }
+      .section {
+        margin-bottom: 1.5rem;
+      }
+      .sec-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+      }
+      .cat-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .cat-card {
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--color-background-primary);
+      }
+      .cat-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .cat-head:hover {
+        background: var(--color-background-secondary);
+      }
+      .cat-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .cat-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        flex: 1;
+      }
+      .cat-bar-wrap {
+        flex: 0 0 140px;
+        height: 6px;
+        background: var(--color-background-secondary);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .cat-bar {
+        height: 6px;
+        border-radius: 3px;
+      }
+      .cat-pts {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        min-width: 60px;
+        text-align: right;
+      }
+      .cat-chev {
+        font-size: 11px;
+        color: var(--color-text-tertiary);
+        transition: transform 0.2s;
+      }
+      .cat-card.open .cat-chev {
+        transform: rotate(180deg);
+      }
+      .cat-body {
+        display: none;
+        border-top: 0.5px solid var(--color-border-tertiary);
+        padding: 10px 14px;
+      }
+      .cat-card.open .cat-body {
+        display: block;
+      }
+      .action-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        gap: 10px;
+      }
+      .action-row:last-child {
+        border-bottom: none;
+      }
+      .ar-left {
+        flex: 1;
+      }
+      .ar-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+      }
+      .ar-desc {
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        margin-top: 1px;
+        line-height: 1.4;
+      }
+      .ar-pts {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .pts-done {
+        background: var(--color-background-success);
+        color: var(--color-text-success);
+      }
+      .pts-gap {
+        background: var(--color-background-danger);
+        color: var(--color-text-danger);
+      }
+      .pts-partial {
+        background: var(--color-background-warning);
+        color: var(--color-text-warning);
+      }
+      .gap-section {
+        margin-top: 1.5rem;
+      }
+      .gap-card {
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        background: var(--color-background-primary);
+      }
+      .gap-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        margin-bottom: 4px;
+      }
+      .gap-desc {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+        margin-bottom: 6px;
+      }
+      .gap-pts {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 10px;
+        display: inline-block;
+        background: var(--color-background-danger);
+        color: var(--color-text-danger);
+      }
+      .upgrade-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        gap: 10px;
+      }
+      .upgrade-row:last-child {
+        border-bottom: none;
+      }
+      .ur-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+      }
+      .ur-desc {
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        margin-top: 1px;
+      }
+      .ur-badge {
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 8px;
+        font-weight: 500;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .ub-p2 {
+        background: var(--color-background-info);
+        color: var(--color-text-info);
+      }
+      .ub-e5 {
+        background: #f3e5f5;
+        color: #6a1b9a;
+      }
+      @media (prefers-color-scheme: dark) {
+        .ub-e5 {
+          background: #2d1b3d;
+          color: #ce93d8;
+        }
+      }
+      .note-box {
+        background: var(--color-background-secondary);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+        margin-top: 10px;
+      }
+      .note-box strong {
+        color: var(--color-text-primary);
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 class="sr-only">
+      Eldib & Co estimated Microsoft Secure Score breakdown after implementing
+      all configured policies
+    </h2>
+
+    <div class="top">
+      <h1>Eldib & Co — estimated Microsoft Secure Score</h1>
+      <p>
+        After full implementation of all configured policies · M365 Business
+        Premium · Entra ID P1
+      </p>
+    </div>
+
+    <div class="score-hero">
+      <div class="dial-wrap">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle
+            cx="60"
+            cy="60"
+            r="50"
+            fill="none"
+            stroke="var(--color-background-secondary)"
+            stroke-width="10"
+          />
+          <circle
+            cx="60"
+            cy="60"
+            r="50"
+            fill="none"
+            stroke="#1D9E75"
+            stroke-width="10"
+            stroke-dasharray="314"
+            stroke-dashoffset="69"
+            stroke-linecap="round"
+            transform="rotate(-90 60 60)"
+          />
+        </svg>
+        <div class="dial-label">
+          <span class="dial-score">78</span>
+          <span class="dial-max">/ 100</span>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-title">Score journey — Eldib & Co</div>
+        <div class="compare-row">
+          <div class="cmp">
+            <span class="cmp-label">Before (no config)</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="width: 22%; background: #e24b4a"
+              ></div>
+            </div>
+            <span class="cmp-val">~22</span>
+          </div>
+          <div class="cmp">
+            <span class="cmp-label">After CA + Intune</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="width: 52%; background: #ef9f27"
+              ></div>
+            </div>
+            <span class="cmp-val">~52</span>
+          </div>
+          <div class="cmp">
+            <span class="cmp-label">After + Defender + Email</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="width: 68%; background: #ef9f27"
+              ></div>
+            </div>
+            <span class="cmp-val">~68</span>
+          </div>
+          <div class="cmp">
+            <span class="cmp-label">After all recommendations</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="width: 78%; background: #1d9e75"
+              ></div>
+            </div>
+            <span class="cmp-val">~78</span>
+          </div>
+          <div class="cmp">
+            <span class="cmp-label">Max with BP license</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="
+                  width: 82%;
+                  background: var(--color-background-secondary);
+                  border: 0.5px dashed var(--color-border-secondary);
+                "
+              ></div>
+            </div>
+            <span class="cmp-val">~82</span>
+          </div>
+          <div class="cmp">
+            <span class="cmp-label">Max with P2 upgrade</span>
+            <div class="cmp-bar-wrap">
+              <div
+                class="cmp-bar"
+                style="
+                  width: 94%;
+                  background: var(--color-background-secondary);
+                  border: 0.5px dashed var(--color-border-secondary);
+                "
+              ></div>
+            </div>
+            <span class="cmp-val">~94</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="section">
+        <div class="sec-title">Score by category — click to expand actions</div>
+        <div class="cat-grid">
+          <div class="cat-card open" onclick="toggleCat(this)">
+            <div class="cat-head">
+              <div class="cat-dot" style="background: #185fa5"></div>
+              <span class="cat-name">Identity</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  style="width: 90%; background: #185fa5"
+                ></div>
+              </div>
+              <span class="cat-pts">27 / 30 pts</span>
+              <span class="cat-chev">▾</span>
+            </div>
+            <div class="cat-body">
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Require MFA for all users (CA-002)</div>
+                  <div class="ar-desc">
+                    Highest single identity action in Secure Score
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+9 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Require MFA for admin roles (CA-003)
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+5 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Block legacy authentication (CA-001)
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+5 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Enable SSPR</div>
+                </div>
+                <span class="ar-pts pts-done">+3 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Password protection — custom banned list
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Do not expire passwords (cloud accounts)
+                  </div>
+                  <div class="ar-desc">
+                    Cloud-managed accounts should use never-expire + MFA, not
+                    forced rotation
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Sign-in risk policy (needs Entra P2)
+                  </div>
+                  <div class="ar-desc">
+                    Not available with Business Premium P1 license
+                  </div>
+                </div>
+                <span class="ar-pts pts-gap">-3 pts gap</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cat-card" onclick="toggleCat(this)">
+            <div class="cat-head">
+              <div class="cat-dot" style="background: #639922"></div>
+              <span class="cat-name">Devices</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  style="width: 85%; background: #639922"
+                ></div>
+              </div>
+              <span class="cat-pts">22 / 26 pts</span>
+              <span class="cat-chev">▾</span>
+            </div>
+            <div class="cat-body">
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Entra ID join + Intune compliance (CA-004)
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+5 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">BitLocker on Windows devices</div>
+                </div>
+                <span class="ar-pts pts-done">+4 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Windows Hello for Business (passwordless)
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+3 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Require Secure Boot</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Windows Update rings — patch management
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+3 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Entra ID LAPS — local admin rotation
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+3 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Mobile compliance — iOS/Android</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Microsoft Defender for Endpoint P2 features
+                  </div>
+                  <div class="ar-desc">
+                    Advanced hunting, 6-month data retention — needs Defender P2
+                    / E5
+                  </div>
+                </div>
+                <span class="ar-pts pts-gap">-4 pts gap</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cat-card" onclick="toggleCat(this)">
+            <div class="cat-head">
+              <div class="cat-dot" style="background: #d85a30"></div>
+              <span class="cat-name">Apps (Email + Office)</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  style="width: 88%; background: #d85a30"
+                ></div>
+              </div>
+              <span class="cat-pts">16 / 18 pts</span>
+              <span class="cat-chev">▾</span>
+            </div>
+            <div class="cat-body">
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Safe Attachments — enabled</div>
+                </div>
+                <span class="ar-pts pts-done">+4 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Safe Links — enabled</div>
+                </div>
+                <span class="ar-pts pts-done">+4 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Anti-phishing — impersonation protection
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+3 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Anti-spam — ZAP enabled</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">DMARC — p=reject configured</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">App protection policy (MAM)</div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Defender for Cloud Apps (full MCAS)</div>
+                  <div class="ar-desc">
+                    Full session controls and shadow IT — needs E5 or add-on
+                  </div>
+                </div>
+                <span class="ar-pts pts-gap">-2 pts gap</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cat-card" onclick="toggleCat(this)">
+            <div class="cat-head">
+              <div class="cat-dot" style="background: #534ab7"></div>
+              <span class="cat-name">Endpoint security (Defender)</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  style="width: 83%; background: #534ab7"
+                ></div>
+              </div>
+              <span class="cat-pts">10 / 12 pts</span>
+              <span class="cat-chev">▾</span>
+            </div>
+            <div class="cat-body">
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Cloud-delivered protection — enabled
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    Real-time protection + behavior monitoring
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Network protection — block mode</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">PUA protection — block</div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Controlled Folder Access (CFA)</div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">ASR rules — block mode</div>
+                </div>
+                <span class="ar-pts pts-done">+2 pts</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Tamper protection</div>
+                  <div class="ar-desc">
+                    Prevents malware from disabling Defender — configure in
+                    Defender portal under Advanced features
+                  </div>
+                </div>
+                <span class="ar-pts pts-partial">+0 — add this!</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Defender P2 EDR advanced features</div>
+                  <div class="ar-desc">
+                    Custom detection rules, advanced hunting — needs Defender P2
+                  </div>
+                </div>
+                <span class="ar-pts pts-gap">-2 pts gap</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cat-card" onclick="toggleCat(this)">
+            <div class="cat-head">
+              <div class="cat-dot" style="background: #0f6e56"></div>
+              <span class="cat-name">Data (Purview + SharePoint)</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  style="width: 75%; background: #0f6e56"
+                ></div>
+              </div>
+              <span class="cat-pts">3 / 4 pts</span>
+              <span class="cat-chev">▾</span>
+            </div>
+            <div class="cat-body">
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">DLP policy configured</div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Sensitivity labels deployed</div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">
+                    SharePoint external sharing restricted
+                  </div>
+                </div>
+                <span class="ar-pts pts-done">+1 pt</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Retention policies configured</div>
+                </div>
+                <span class="ar-pts pts-done">+0 (awareness)</span>
+              </div>
+              <div class="action-row">
+                <div class="ar-left">
+                  <div class="ar-name">Advanced data governance (E3/E5)</div>
+                  <div class="ar-desc">
+                    Information barriers, advanced eDiscovery — needs higher
+                    license
+                  </div>
+                </div>
+                <span class="ar-pts pts-gap">-1 pt gap</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">
+          One action you missed — add it now (free +2 pts)
+        </div>
+        <div class="gap-card">
+          <div class="gap-title">Tamper protection — not yet configured</div>
+          <div class="gap-desc">
+            Tamper protection locks Defender settings so that malware,
+            ransomware, and even local admins cannot disable real-time
+            protection, cloud protection, or behavior monitoring. Without it,
+            sophisticated malware kills Defender before doing damage. This is a
+            2-minute change.
+          </div>
+          <span class="gap-pts">+2 pts free</span>
+          <div
+            style="
+              font-size: 12px;
+              color: var(--color-text-tertiary);
+              margin-top: 6px;
+              font-family: var(--font-mono);
+            "
+          >
+            security.microsoft.com → Settings → Endpoints → Advanced features →
+            Tamper protection → On
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">
+          Remaining score gap — what's locked behind upgrades
+        </div>
+        <div class="cat-card">
+          <div class="cat-head" onclick="toggleCat(this)">
+            <span class="cat-name"
+              >~16 points locked behind license upgrades</span
+            >
+            <span class="cat-chev">▾</span>
+          </div>
+          <div class="cat-body">
+            <div class="upgrade-row">
+              <div>
+                <div class="ur-name">
+                  Risk-based Conditional Access (sign-in risk + user risk
+                  policies)
+                </div>
+                <div class="ur-desc">
+                  Entra ID Identity Protection — dynamically blocks risky
+                  sign-ins. Worth ~8 points. The biggest single upgrade.
+                </div>
+              </div>
+              <span class="ur-badge ub-p2">Entra P2</span>
+            </div>
+            <div class="upgrade-row">
+              <div>
+                <div class="ur-name">Privileged Identity Management (PIM)</div>
+                <div class="ur-desc">
+                  Just-in-time admin access — admins request elevated roles for
+                  limited time windows instead of being permanent admins. Worth
+                  ~4 points.
+                </div>
+              </div>
+              <span class="ur-badge ub-p2">Entra P2</span>
+            </div>
+            <div class="upgrade-row">
+              <div>
+                <div class="ur-name">
+                  Defender for Endpoint P2 — advanced EDR
+                </div>
+                <div class="ur-desc">
+                  6-month data retention, custom detection rules, advanced
+                  hunting (KQL queries). Worth ~3 points. Most relevant to your
+                  SOC work.
+                </div>
+              </div>
+              <span class="ur-badge ub-e5">Defender P2</span>
+            </div>
+            <div class="upgrade-row">
+              <div>
+                <div class="ur-name">
+                  Microsoft Defender for Cloud Apps (full)
+                </div>
+                <div class="ur-desc">
+                  Shadow IT discovery, full session controls for any app, OAuth
+                  app governance. Worth ~2 points.
+                </div>
+              </div>
+              <span class="ur-badge ub-e5">E5 / add-on</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-box">
+        <strong>Important note on scoring:</strong> Microsoft Secure Score
+        maximum varies per tenant based on your licensed products and number of
+        users. The scores shown here are realistic estimates based on M365
+        Business Premium improvement actions. Your actual score in
+        security.microsoft.com will show your exact maximum and the precise
+        points per action. Check it at security.microsoft.com → Secure Score →
+        Improvement actions — it is your best real-time guide on what to do
+        next.
+      </div>
+    </div>
+    <script>
+      function toggleCat(card) {
+        card.classList.toggle("open");
+        event.stopPropagation();
+      }
+    </script>
+  </body>
+</html>
